@@ -15,6 +15,16 @@ function onload() {
 		myPlayer.pause();
 	}
 
+	myPlayer.on('pause', function () {
+		console.log('video paused, sending pause');
+		socket.emit('pause');
+	});
+
+	myPlayer.on('play', function () {
+		console.log('video played, sending play');
+		socket.emit('play');
+	});
+
 	socket.on('hi', function(){
 		console.log('hi');
 	});
@@ -39,11 +49,11 @@ function onload() {
 	socket.on('pause', function(){
 		console.log('received pause');
 		pause();
-	})
+	});
 	socket.on('play', function(){
 		console.log('received pause');
 		play();
-	})
+	});
 
 }
 
