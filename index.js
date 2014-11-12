@@ -1,7 +1,7 @@
 function onload() {
-	
+	var socket = io();
 	var myPlayer = videojs('example_video_1');
-	myPlayer.src({type: "video/webm", src: videoURL("10.15.40.141", "3500") });
+	myPlayer.src({type: "video/webm", src: videoURL("10.0.0.3", "1") });
 	var WAIT_MS = 10000;
 
 
@@ -14,10 +14,37 @@ function onload() {
 		console.log("pause called");
 		myPlayer.pause();
 	}
-	
-	console.log("onload called, waiting " + WAIT_MS);
-	setTimeout(play, WAIT_MS);
-	setTimeout(pause, WAIT_MS + 5000);
+
+	socket.on('hi', function(){
+		console.log('hi');
+	});
+	$('#pause').click(function(){
+		console.log('pause clicked, sending pause');
+		socket.emit('pause');
+	});
+	$('#play').click(function(){
+		console.log('play clicked, sending play');
+		socket.emit('play');
+	});
+	socket.on('command', function(msg){
+		console.log('received command:' + msg);
+		if (msg === 'pause'){
+			pause();
+		}
+		if (msg === 'play'){
+			play();
+		}
+	});
+
+	socket.on('pause', function(){
+		console.log('received pause');
+		pause();
+	})
+	socket.on('play', function(){
+		console.log('received pause');
+		play();
+	})
+
 }
 
 window.onload = onload;
