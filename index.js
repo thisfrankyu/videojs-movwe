@@ -2,7 +2,6 @@ function onload() {
 	var socket = io();
 	var myPlayer = videojs('example_video_1');
 
-	//myPlayer.src({type: "video/webm", src: videoURL("10.0.0.3", "1") });
 	var address = $('#address').val();
 	var metadata = $('#metadata').val();
 	myPlayer.src({type: "video/webm", src: videoURL(address, metadata) });
