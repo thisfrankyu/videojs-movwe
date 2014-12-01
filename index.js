@@ -1,7 +1,11 @@
 function onload() {
 	var socket = io();
 	var myPlayer = videojs('example_video_1');
-	myPlayer.src({type: "video/webm", src: videoURL("10.0.0.3", "1") });
+
+	//myPlayer.src({type: "video/webm", src: videoURL("10.0.0.3", "1") });
+	var address = $('#address').val();
+	var metadata = $('#metadata').val();
+	myPlayer.src({type: "video/webm", src: videoURL(address, metadata) });
 	var WAIT_MS = 10000;
 
 
@@ -28,14 +32,14 @@ function onload() {
 	socket.on('hi', function(){
 		console.log('hi');
 	});
-	$('#pause').click(function(){
+	/*$('#pause').click(function(){
 		console.log('pause clicked, sending pause');
 		socket.emit('pause');
 	});
 	$('#play').click(function(){
 		console.log('play clicked, sending play');
 		socket.emit('play');
-	});
+	});*/
 	socket.on('command', function(msg){
 		console.log('received command:' + msg);
 		if (msg === 'pause'){
@@ -55,9 +59,13 @@ function onload() {
 		play();
 	});
 
+	event.stopPropagation();
 }
 
-window.onload = onload;
+//window.onload = onload;
+$(function () {
+	$('#load').click(onload);
+});
 
 function videoURL(host, metadataID) {
 	return "http://"+host+":32400/video/:/transcode/universal/start"
