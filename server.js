@@ -3,6 +3,7 @@ var app = express();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
 var request = require('request');
+var requestPromise = require('request-promise');
 var parseString = require('xml2js').parseString;
 
 app.use(express.static(__dirname + '/video-js'));
@@ -12,19 +13,6 @@ app.get('/', function (request, response) {
 });
 
 function authenticate(username, password) {
-    function callback(error, response, body) {
-        if (!error && response.statusCode === 201) {
-            console.log(body);
-            parseString(body, function (err, result){
-                console.log(result);
-                console.log("authentication token: " + result.user['authentication-token']);
-            });
-        } else{
-            console.log("Error in authentication: " + error);
-            console.log('statusCode: ' + response.statusCode);
-            console.log('error body: ' + body);
-        }
-    }
 
     var encodedUsernamePassword = new Buffer(username + ':' + password).toString('base64');
     var options = {
@@ -32,9 +20,34 @@ function authenticate(username, password) {
         headers: {
             'Authorization': 'Basic ' + encodedUsernamePassword,
             'X-Plex-Client-Identifier': 'movwe'
-        }
+        },
+        resolveWithFullResponse: true
     };
-    request.post(options, callback);
+
+    return requestPromise.post(options).then(function (response) {
+        if (response.statusCode === 201) {
+            var body = response.body;
+            console.log(body);
+            var authenticationToken = '';
+            parseString(body, function (err, result) {
+                console.log(result);
+                authenticationToken = result.user['authentication-token'];
+                console.log('authentication token: ' + authenticationToken);
+                return authenticationToken;
+            });
+            return authenticationToken;
+        } else{
+            console.log('Error in authentication: ' + error);
+            console.log('statusCode: ' + response.statusCode);
+            console.log('error body: ' + body);
+            return 'ERROR';
+        }
+    }, function(error) {
+        console.log('Error in authentication: ' + error);
+    }).then(function (token) {
+        console.log('returned authToken: ' + token);
+        return token;
+    });
 }
 
 io.on('connection', function (socket) {
@@ -55,11 +68,20 @@ io.on('connection', function (socket) {
     socket.on('disconnect', function () {
         console.log('user disconnected');
     });
+    authenticate('blah@blah.com', 'blah').then(function (token) {
+        io.emit('token', token);
+        console.log('token emitted: ' + token);
+        socket.on('authenticate', function () {
+            io.emit('token', token);
+            console.log('token emitted: ' + token);
+        });
+    });
 
 });
 
-http.listen(3000, function () {
-    console.log('listening on *:3000');
+var port = 3000;
+http.listen(port, function () {
+    console.log('listening on *:'+port);
 });
 
-authenticate('blah@blah.com', 'blah');
+
