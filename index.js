@@ -10,28 +10,22 @@ function onload() {
 	var WAIT_MS = 10000;
 
 
-	function play(){
+	function playEveryone(){
 		console.log("play called");
+		console.log('video played, sending play');
+		socket.emit('play');
 		myPlayer.play();
 	}
 
-	function pause(){
-		console.log("pause called");
+	function pauseEveryone(){
+		console.log("pause called, current time: " + myPlayer.currentTime() + '/' + myPlayer.duration());
+		console.log('video paused, sending pause');
+		socket.emit('pause');
 		myPlayer.pause();
 	}
 
-	myPlayer.on('pause', function () {
-		console.log('video paused, sending pause');
-		socket.emit('pause');
-	});
-
-	myPlayer.on('play', function () {
-		console.log('video played, sending play');
-		socket.emit('play');
-	});
-
-	socket.on('hi', function(){
-		console.log('hi');
+	socket.on('hi', function(sessionId){
+		console.log('hi: ' + sessionId);
 	});
 	/*$('#pause').click(function(){
 		console.log('pause clicked, sending pause');
@@ -44,26 +38,41 @@ function onload() {
 	socket.on('command', function(msg){
 		console.log('received command:' + msg);
 		if (msg === 'pause'){
-			pause();
+			pauseEveryone();
 		}
 		if (msg === 'play'){
-			play();
+			playEveryone();
 		}
 	});
-
+	$('#pause').click(function(){
+		console.log('pause clicked, sending pause');
+		pauseEveryone();
+	});
+	$('#play').click(function(){
+		console.log('play clicked, sending play');
+		playEveryone();
+	});
 	socket.on('pause', function(){
 		console.log('received pause');
-		pause();
+		myPlayer.pause();
 	});
 	socket.on('play', function(){
 		console.log('received pause');
-		play();
+		myPlayer.play();
 	});
 
 	socket.on('token', function(token){
 		authToken = token;
 		myPlayer.src({type: "video/webm", src: videoURL(address, metadata, authToken, 'blah') });
 	});
+
+	setInterval(function(){
+		if(myPlayer.currentTime !== undefined){
+			console.log('emitting time: ' + myPlayer.currentTime())
+			socket.emit('time', myPlayer.currentTime());
+		}
+	}, 1000);
+
 	event.stopPropagation();
 }
 
@@ -143,9 +152,9 @@ function plexUrlToString(plexUrl){
 		+"&partIndex=0"
 		+"&protocol=http"
 		+"&offset=0"
-		+"&fastSeek=1"
+		+"&fastSeek=0"
 		+"&directPlay=0"
-		+"&directStream=1"
+		+"&directStream=0"
 		+"&videoQuality=60"
 		+"&videoResolution=640x360"
 		+"&maxVideoBitrate=2000"

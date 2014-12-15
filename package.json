@@ -8,7 +8,8 @@
     "socket.io": "^1.2.0",
     "request": "~2.49.0",
     "xml2js": "~0.4.4",
-    "request-promise": "~0.3.2"
+    "request-promise": "~0.3.2",
+    "underscore": "~1.7.0"
   },
   "devDependencies": {},
   "scripts": {
