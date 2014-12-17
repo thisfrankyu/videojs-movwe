@@ -1,6 +1,6 @@
 
 
-function onload() {
+function onload(event) {
 	var socket = io();
 	var myPlayer = videojs('example_video_1');
 
@@ -68,17 +68,18 @@ function onload() {
 
 	setInterval(function(){
 		if(myPlayer.currentTime !== undefined){
-			console.log('emitting time: ' + myPlayer.currentTime())
+			console.log('emitting time: ' + myPlayer.currentTime());
 			socket.emit('time', myPlayer.currentTime());
 		}
 	}, 1000);
 
 	event.stopPropagation();
+	event.preventDefault();
 }
 
 //window.onload = onload;
 $(function () {
-	$('#load').click(onload);
+	$('#addressForm').submit(onload);
 });
 
 function videoURL(host, metadataID, token, username) {
