@@ -26,14 +26,16 @@ function synchronize() {
     });
     _.each(sessionMap, function (session) {
         var tooFarAhead = session.currentTime > lowestTimeSoFar + acceptableDelay;
-        if (tooFarAhead) {
+        if (tooFarAhead && !session.pausedForSynchronization) {
             session.socket.emit('pause');
             session.pausedForSynchronization = true;
+            console.log('pausing ' + session.id + ' (ahead by ' + (session.currentTime - lowestTimeSoFar) + ')');
         }
         var closeEnoughToStartAgain = session.currentTime < lowestTimeSoFar + goAheadTime;
         if (session.pausedForSynchronization && closeEnoughToStartAgain) {
             session.socket.emit('play');
             session.pausedForSynchronization = false;
+            console.log('resuming ' + session.id);
         }
     });
 }
@@ -65,7 +67,7 @@ function authenticate(username, password) {
         } else {
             console.log('Error in authentication: ' + error);
             console.log('statusCode: ' + response.statusCode);
-            console.log('error body: ' + body);
+            console.log('error body: ' + response.body);
             return 'ERROR';
         }
     }, function (error) {
@@ -97,6 +99,9 @@ io.on('connection', function (sessionSocket) {
     sessionSocket.on('play', function () {
         console.log('emitting play');
         io.emit('play');
+        _.each(sessionMap, function (session) {
+            session.pausedForSynchronization = false;
+        });
     });
     sessionSocket.on('time', function (time) {
         //console.log('client: ' + sessionSocket.id + ' is at time: ' + time);
@@ -107,12 +112,10 @@ io.on('connection', function (sessionSocket) {
         console.log('user disconnected');
         delete sessionMap[sessionSocket.id];
     });
-    authenticate('blah@blah.com', 'blah').then(function (token) {
-        io.emit('token', token);
-        console.log('token emitted: ' + token);
-        sessionSocket.on('authenticate', function () {
-            io.emit('token', token);
-            console.log('token emitted: ' + token);
+    sessionSocket.on('auth', function (data, ret) {
+        authenticate('blah', 'blah').then(function (token) {
+            console.log('token returned: ' + token);
+            ret(token);
         });
     });
 

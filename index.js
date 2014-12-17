@@ -1,49 +1,9 @@
+var socket;
+var videoPlayer;
 
+function onLoad() {
+	videoPlayer = videojs('main_video');
 
-function onload(event) {
-	var socket = io();
-	var myPlayer = videojs('example_video_1');
-
-	var authToken = '';
-	var address = $('#address').val();
-	var metadata = $('#metadata').val();
-	var WAIT_MS = 10000;
-
-
-	function playEveryone(){
-		console.log("play called");
-		console.log('video played, sending play');
-		socket.emit('play');
-		myPlayer.play();
-	}
-
-	function pauseEveryone(){
-		console.log("pause called, current time: " + myPlayer.currentTime() + '/' + myPlayer.duration());
-		console.log('video paused, sending pause');
-		socket.emit('pause');
-		myPlayer.pause();
-	}
-
-	socket.on('hi', function(sessionId){
-		console.log('hi: ' + sessionId);
-	});
-	/*$('#pause').click(function(){
-		console.log('pause clicked, sending pause');
-		socket.emit('pause');
-	});
-	$('#play').click(function(){
-		console.log('play clicked, sending play');
-		socket.emit('play');
-	});*/
-	socket.on('command', function(msg){
-		console.log('received command:' + msg);
-		if (msg === 'pause'){
-			pauseEveryone();
-		}
-		if (msg === 'play'){
-			playEveryone();
-		}
-	});
 	$('#pause').click(function(){
 		console.log('pause clicked, sending pause');
 		pauseEveryone();
@@ -52,35 +12,72 @@ function onload(event) {
 		console.log('play clicked, sending play');
 		playEveryone();
 	});
-	socket.on('pause', function(){
-		console.log('received pause');
-		myPlayer.pause();
-	});
-	socket.on('play', function(){
-		console.log('received pause');
-		myPlayer.play();
-	});
+}
 
-	socket.on('token', function(token){
+function loadVideo(event) {
+	if(socket === undefined) {
+		socket = io();
+
+		socket.on('hi', function(sessionId){
+			console.log('hi: ' + sessionId);
+		});
+		socket.on('command', function(msg){
+			console.log('received command:' + msg);
+			if (msg === 'pause'){
+				pauseEveryone();
+			}
+			if (msg === 'play'){
+				playEveryone();
+			}
+		});
+		socket.on('pause', function(){
+			console.log('received pause');
+			videoPlayer.pause();
+		});
+		socket.on('play', function(){
+			console.log('received pause');
+			videoPlayer.play();
+		});
+	}
+	var authToken = '';
+
+	var address = $('#address').val();
+	var metadata = $('#metadata').val();
+
+	socket.emit('auth', {}, function(token){
 		authToken = token;
-		myPlayer.src({type: "video/webm", src: videoURL(address, metadata, authToken, 'blah') });
+		videoPlayer.src({type: "video/webm", src: videoURL(address, metadata, authToken, 'blah') });
 	});
 
 	setInterval(function(){
-		if(myPlayer.currentTime !== undefined){
-			console.log('emitting time: ' + myPlayer.currentTime());
-			socket.emit('time', myPlayer.currentTime());
+		if(videoPlayer.currentTime !== undefined){
+			console.log('emitting time: ' + videoPlayer.currentTime());
+			socket.emit('time', videoPlayer.currentTime());
 		}
 	}, 1000);
 
-	event.stopPropagation();
 	event.preventDefault();
 }
 
-//window.onload = onload;
+//window.onLoad = onLoad;
 $(function () {
-	$('#addressForm').submit(onload);
+	onLoad();
+	$('#addressForm').submit(loadVideo);
 });
+
+function playEveryone(){
+	console.log("play called");
+	console.log('video played, sending play');
+	socket.emit('play');
+	videoPlayer.play();
+}
+
+function pauseEveryone(){
+	console.log("pause called, current time: " + videoPlayer.currentTime() + '/' + videoPlayer.duration());
+	console.log('video paused, sending pause');
+	socket.emit('pause');
+	videoPlayer.pause();
+}
 
 function videoURL(host, metadataID, token, username) {
 	return "http://"+host+":32400/video/:/transcode/universal/start"
