@@ -7,14 +7,13 @@
     <meta name="viewport" content="width=device-width">
     <link href="lib/bower/videojs/dist/video-js/video-js.css" rel="stylesheet"/>
     <link href="lib/bower/videojs-sublime-skin/dist/videojs-sublime-skin.css" rel="stylesheet"/>
-    <link href="lib/bower/bootstrap/dist/css/bootstrap.css" rel="stylesheet"/>
-    <link href="lib/bower/bootstrap/dist/css/bootstrap-theme.css" rel="stylesheet"/>
+    <link href="lib/bower/bootswatch-dist/css/bootstrap.css" rel="stylesheet"/>
     <link href="lib/bower/fontawesome/css/font-awesome.css" rel="stylesheet">
     <link href="index.css" rel="stylesheet">
     <script src="lib/bower/videojs/dist/video-js/video.dev.js" type="text/javascript"></script>
     <script src="lib/bower/socket.io-client/socket.io.js"></script>
     <script src="lib/bower/jquery/dist/jquery.js"></script>
-    <script src="lib/bower/bootstrap/dist/js/bootstrap.js" type="text/javascript"></script>
+    <script src="lib/bower/bootswatch-dist/js/bootstrap.js" type="text/javascript"></script>
     <script src="index.js" type="text/javascript"></script>
 </head>
 <body>
@@ -31,14 +30,18 @@
         </video>
     </div>
 
-    <form id="addressForm" class="form-inline">
-        <label for="address">Address</label> <input id="address" type="text" name="address" placeholder="0.0.0.0"/>
-        <label for="metadata">Metadata ID</label> <input id="metadata" type="text" name="metadata" placeholder="1234"/>
-        <button id="load" type="submit" class="btn btn-success">Load</button>
-    </form>
+    <div id="controls" class="well bs-component">
+        <form id="addressForm" class="form-inline">
+            <label for="address">Address</label> <input id="address" class="form-control" type="text" name="address" placeholder="0.0.0.0"/>
+            <label for="metadata">Metadata ID</label> <input id="metadata" class="form-control" type="text" name="metadata" placeholder="1234"/>
+            <button id="load" type="submit" class="btn btn-success">Load</button>
+        </form>
+    </div>
 
-    <button id="play" class="btn btn-success"><i class="fa fa-play"></i> Play Everyone</button>
-    <button id="pause" class="btn btn-warning"><i class="fa fa-pause"></i> Pause Everyone</button>
+    <div id="groupControls">
+        <button id="play" class="btn btn-success btn-lg"><i class="fa fa-play"></i> Play Everyone</button>
+        <button id="pause" class="btn btn-warning btn-lg"><i class="fa fa-pause"></i> Pause Everyone</button>
+    </div>
 
     <div class="footer">
         <p class="pull-right"><i class="fa fa-heart"></i> from MovWe</p>

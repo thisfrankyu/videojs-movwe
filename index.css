@@ -1,3 +1,30 @@
 #addressForm {
     margin: 10px 0;
 }
+
+.container {
+    width: 700px;
+}
+
+#controls {
+    margin-top: 20px;
+}
+
+#groupControls {
+    text-align: center;
+}
+
+#groupControls > button {
+    margin: 0 10px;
+}
+
+.video {
+    width: 640px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+input.form-control {
+    background-color: #484e55;
+    border: 1px solid rgba(0, 0, 0, 0.6);
+}

@@ -21,6 +21,7 @@
   ],
   "dependencies": {
     "bootstrap": "~3.3.1",
+    "bootswatch-dist": "3.3.1+2-slate",
     "fontawesome": "~4.2.0",
     "videojs-sublime-skin": "~1.0.1",
     "videojs": "~4.11.1",
