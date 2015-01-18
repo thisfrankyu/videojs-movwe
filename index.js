@@ -12,7 +12,25 @@ function onLoad() {
 		console.log('play clicked, sending play');
 		playEveryone();
 	});
+
 }
+
+function parseEpisode(xml){
+	console.log("parsingEpisode");
+	$(xml).find("Video").each(function () {
+		if (!$(this).attr("type") === 'episode') {
+			return;
+		}
+		var episodeInfo = {
+			grandparentTitle: $(this).attr("grandparentTitle"),
+			episodeNumber: $(this).attr("index"),
+			title: $(this).attr("title"),
+			metadataId: $(this).attr("ratingKey")
+		}
+		console.log(JSON.stringify(episodeInfo, null, 2));
+	});
+}
+
 
 function loadVideo(event) {
 	if(socket === undefined) {
@@ -59,7 +77,15 @@ function loadVideo(event) {
 	});
 
 	var previousTime = undefined;
-
+	var metadataId;
+	for (metadataId = 3; metadataId < 20; metadataId++){
+		$.ajax({
+			type: "GET",
+			url: "http://"+address+":32400/library/metadata/"+metadataId,
+			dataType: "xml",
+			success: parseEpisode
+		});
+	}
 	setInterval(function(){
 		if(videoPlayer.currentTime !== undefined && videoPlayer.currentTime() !== previousTime){
 			console.log('emitting time: ' + videoPlayer.currentTime());
