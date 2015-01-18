@@ -43,6 +43,15 @@ function loadVideo(event) {
 
 	var address = $('#address').val();
 	var metadata = $('#metadata').val();
+	var resolution = $('input:radio[name=resolution]:checked').val();
+	var hrs = $('#hours').val();
+	var mins = $('#minutes').val();
+	var secs = $('#seconds').val();
+	var offset = moment.duration({
+		seconds: secs,
+		minutes: mins,
+		hours: hrs
+	}).asSeconds();
 
 	socket.emit('auth', {}, function(token){
 		authToken = token;
