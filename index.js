@@ -46,7 +46,7 @@ function loadVideo(event) {
 
 	socket.emit('auth', {}, function(token){
 		authToken = token;
-		videoPlayer.src({type: "video/webm", src: videoURL(address, metadata, authToken, 'blah') });
+		videoPlayer.src({type: "video/webm", src: videoURL(address, metadata, authToken, 'blah', resolution, offset) });
 	});
 
 	setInterval(function(){
@@ -79,7 +79,7 @@ function pauseEveryone(){
 	videoPlayer.pause();
 }
 
-function videoURL(host, metadataID, token, username, resolution) {
+function videoURL(host, metadataID, token, username, resolution, offset) {
 	if (resolution === undefined){
 		resolution = "640x360";
 	}
@@ -88,7 +88,7 @@ function videoURL(host, metadataID, token, username, resolution) {
 		+ "&mediaIndex=0"
 		+ "&partIndex=0"
 		+ "&protocol=http"
-		+ "&offset=0"
+		+ "&offset=" + offset
 		+ "&fastSeek=1"
 		+ "&directPlay=0"
 		+ "&directStream=1"
