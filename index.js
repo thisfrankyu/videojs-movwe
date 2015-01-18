@@ -58,10 +58,13 @@ function loadVideo(event) {
 		videoPlayer.src({type: "video/webm", src: videoURL(address, metadata, authToken, 'blah', resolution, offset) });
 	});
 
+	var previousTime = undefined;
+
 	setInterval(function(){
-		if(videoPlayer.currentTime !== undefined){
+		if(videoPlayer.currentTime !== undefined && videoPlayer.currentTime() !== previousTime){
 			console.log('emitting time: ' + videoPlayer.currentTime());
 			socket.emit('time', videoPlayer.currentTime());
+			previousTime = videoPlayer.currentTime();
 		}
 	}, 1000);
 
