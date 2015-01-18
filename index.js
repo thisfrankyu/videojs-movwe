@@ -79,7 +79,10 @@ function pauseEveryone(){
 	videoPlayer.pause();
 }
 
-function videoURL(host, metadataID, token, username) {
+function videoURL(host, metadataID, token, username, resolution) {
+	if (resolution === undefined){
+		resolution = "640x360";
+	}
 	return "http://"+host+":32400/video/:/transcode/universal/start"
 		+ "?path=http%3A%2F%2F127.0.0.1%3A32400%2Flibrary%2Fmetadata%2F" + metadataID
 		+ "&mediaIndex=0"
@@ -90,7 +93,7 @@ function videoURL(host, metadataID, token, username) {
 		+ "&directPlay=0"
 		+ "&directStream=1"
 		+ "&videoQuality=60"
-		+ "&videoResolution=640x360"
+		+ "&videoResolution=" + resolution
 		+ "&maxVideoBitrate=2000"
 		+ "&subtitleSize=100"
 		+ "&audioBoost=100"
