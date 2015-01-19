@@ -72,8 +72,11 @@ function loadVideo(event) {
 	}).asSeconds();
 
 	socket.emit('auth', {}, function(token){
-		authToken = token;
-		videoPlayer.src({type: "video/webm", src: videoURL(address, metadata, authToken, 'blah', resolution, offset) });
+		authToken = token[0];
+		videoPlayer.src({
+			type: "video/webm",
+			src: new PlexUrl(address, metadata, authToken, 'blah', {videoResolution: resolution, offset: offset})
+		});
 	});
 
 	var previousTime = undefined;
@@ -117,98 +120,75 @@ function pauseEveryone(){
 	videoPlayer.pause();
 }
 
-function videoURL(host, metadataID, token, username, resolution, offset) {
-	if (resolution === undefined){
-		resolution = "640x360";
-	}
-	return "http://"+host+":32400/video/:/transcode/universal/start"
-		+ "?path=http%3A%2F%2F127.0.0.1%3A32400%2Flibrary%2Fmetadata%2F" + metadataID
-		+ "&mediaIndex=0"
-		+ "&partIndex=0"
-		+ "&protocol=http"
-		+ "&offset=" + offset
-		+ "&fastSeek=1"
-		+ "&directPlay=0"
-		+ "&directStream=1"
-		+ "&videoQuality=60"
-		+ "&videoResolution=" + resolution
-		+ "&maxVideoBitrate=2000"
-		+ "&subtitleSize=100"
-		+ "&audioBoost=100"
-		+ "&session=ygepu1ko61dcxr"
-		+ "&X-Plex-Client-Identifier=ktu960u2urn0o1or"
-		+ "&X-Plex-Product=MovWe"
-		+ "&X-Plex-Device=Windows"
-		+ "&X-Plex-Platform=Chrome"
-		+ "&X-Plex-Platform-Version=40.0"
-		+ "&X-Plex-Version=2.2.7"
-		+ "&X-Plex-Token=" + token
-		+ "&X-Plex-Username=" + username
-		+ "&X-Plex-Device-Name=MovWe+(Chrome)";
-}
 
-
-
-function PlexUrl(host, metadataId, options) {
+function PlexUrl(host, metadataId, token, username, options) {
 	if (typeof host !== 'string' || host === '') {
 		throw new Error('host must be a string');
 	}
 	if (typeof metadataId !== 'string') {
 		throw new Error('metadataId must be a string');
 	}
+	if (typeof token !== 'string' || token === '') {
+		throw new Error('token must be a string');
+	}
+	if (typeof username !== 'string') {
+		throw new Error('username must be a string');
+	}
 	this.host = host;
 	this.metadataId = metadataId;
-	this.mediaIndex = options.mediaIndex;
-	this.partIndex = options.partIndex;
-	this.protocol = options.protocol;
-	this.offset = options.offset;
-	this.fastSeek = options.fastSeek;
-	this.directPlay = options.directPlay;
-	this.directStream = options.directStream;
-	this.videoQuality = options.videoQuality;
-	this.videoResolution = options.videoResolution;
-	this.maxVideoBitrate = options.maxVideoBitrate;
-	this.subtitleSize = options.subtitleSize;
-	this.audioBoost = options.audioBoost;
-	this.session = options.session;
-	this.xPlexClientId = options.xPlexClientId;
-	this.xPlexProduct = options.xPlexProduct;
-	this.xPlexPlatform = options.xPlexPlatform;
-	this.xPlexPlatformVersion = options.xPlexPlatformVersion;
-	this.xPlexVersion = options.xPlexVersion;
-	this.xPlexDeviceName = options.xPlexDeviceName;
+	this.token = token;
+	this.username = username;
+	this.options = {
+		mediaIndex: 0,
+		partIndex: 0,
+		protocol: "http",
+		offset: 0,
+		fastSeek: 1,
+		directPlay: 0,
+		directStream: 1,
+		videoQuality: 60,
+		videoResolution: "640x360",
+		maxVideoBitrate: 2000,
+		subtitleSize: 100,
+		audioBoost: 100,
+		session: "ygepu1ko61dcxr",
+		xPlexClientId: "ktu960u2urn0o1or",
+		xPlexProduct: "MovWe",
+		xPlexDevice: "Windows",
+		xPlexPlatform: "Chrome",
+		xPlexPlatformVersion: "40.0",
+		xPlexVersion: "2.2.7",
+		xPlexDeviceName: "MovWe+(Chrome)"
+	};
+	this.options = _.defaults(options, this.options);
 }
 
 PlexUrl.prototype.toString = function () {
-
-}
-
-
-function plexUrlToString(plexUrl){
-	return "http://"+plexUrl.host+":32400/video/:/transcode/universal/start"
-		+"?path=http%3A%2F%2F"+plexUrl.host+"%3A32400%2Flibrary%2Fmetadata%2F"+ plexUrl.metadataId
-		+"&mediaIndex=0"
-		+"&partIndex=0"
-		+"&protocol=http"
-		+"&offset=0"
-		+"&fastSeek=0"
-		+"&directPlay=0"
-		+"&directStream=0"
-		+"&videoQuality=60"
-		+"&videoResolution=640x360"
-		+"&maxVideoBitrate=2000"
-		+"&subtitleSize=100"
-		+"&audioBoost=100"
-		+"&session=ygepu1ko61dcxr"
-		+"&X-Plex-Client-Identifier=ktu960u2urn0o1or"
-		+"&X-Plex-Product=MovWe"
-		+"&X-Plex-Device=Windows"
-		+"&X-Plex-Platform=Chrome"
-		+"&X-Plex-Platform-Version=40.0"
-		+"&X-Plex-Version=2.2.7"
-		+"&X-Plex-Device-Name=MovWe+(Chrome)";
-
-}
+	return "http://"+this.host+":10041/video/:/transcode/universal/start"
+		+ "?path=http%3A%2F%2F127.0.0.1%3A32400%2Flibrary%2Fmetadata%2F" + this.metadataId
+		+ "&mediaIndex=" + this.options.mediaIndex
+		+ "&partIndex=" + this.options.partIndex
+		+ "&protocol=" + this.options.protocol
+		+ "&offset=" + this.options.offset
+		+ "&fastSeek=" + this.options.fastSeek
+		+ "&directPlay=" + this.options.directPlay
+		+ "&directStream=" + this.options.directStream
+		+ "&videoQuality=" + this.options.videoQuality
+		+ "&videoResolution=" + this.options.videoResolution
+		+ "&maxVideoBitrate=" + this.options.maxVideoBitrate
+		+ "&subtitleSize=" + this.options.subtitleSize
+		+ "&audioBoost=" + this.options.audioBoost
+		+ "&session=" + this.options.session
+		+ "&X-Plex-Client-Identifier=" + this.options.xPlexClientId
+		+ "&X-Plex-Product=" + this.options.xPlexProduct
+		+ "&X-Plex-Device=" + this.options.xPlexDevice
+		+ "&X-Plex-Platform=" + this.options.xPlexPlatform
+		+ "&X-Plex-Platform-Version=" + this.options.xPlexPlatformVersion
+		+ "&X-Plex-Version=" + this.options.xPlexVersion
+		+ "&X-Plex-Token=" + this.token
+		+ "&X-Plex-Username=" + this.username
+		+ "&X-Plex-Device-Name=" + this.options.xPlexDeviceName;
+};
 
 // /:/timeline
 // ?X-Plex-Platform=<val>
