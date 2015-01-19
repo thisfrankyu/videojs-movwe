@@ -168,7 +168,7 @@ function PlexUrl(host, metadataId, token, username, options) {
 }
 
 PlexUrl.prototype.toString = function () {
-	return "http://"+this.host+":10041/video/:/transcode/universal/start"
+	return "http://"+this.host+":32400/video/:/transcode/universal/start"
 		+ "?path=http%3A%2F%2F127.0.0.1%3A32400%2Flibrary%2Fmetadata%2F" + this.metadataId
 		+ "&mediaIndex=" + this.options.mediaIndex
 		+ "&partIndex=" + this.options.partIndex
