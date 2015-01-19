@@ -57,6 +57,10 @@ function loadVideo(event) {
 			videoPlayer.play();
 		});
 	}
+
+	$('#pause').removeAttr("disabled");
+	$('#play').removeAttr("disabled");
+
 	var authToken = '';
 
 	var address = $('#address').val();
