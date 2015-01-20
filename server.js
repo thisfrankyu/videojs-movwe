@@ -47,7 +47,7 @@ function authenticate(username, password) {
         url: "https://my.plexapp.com/users/sign_in.xml",
         headers: {
             'Authorization': 'Basic ' + encodedUsernamePassword,
-            'X-Plex-Client-Identifier': 'movwe'
+            'X-Plex-Client-Identifier': 'MovWe'
         },
         resolveWithFullResponse: true
     };
@@ -55,12 +55,12 @@ function authenticate(username, password) {
     return requestPromise.post(options).then(function (response) {
         if (response.statusCode === 201) {
             var body = response.body;
-            console.log(body);
+            //console.log(body);
             var authenticationToken = '';
             parseString(body, function (err, result) {
-                console.log(result);
+                //console.log(result);
                 authenticationToken = result.user['authentication-token'];
-                console.log('authentication token: ' + authenticationToken);
+                //console.log('authentication token: ' + authenticationToken);
                 return authenticationToken;
             });
             return authenticationToken;
@@ -113,8 +113,9 @@ io.on('connection', function (sessionSocket) {
         delete sessionMap[sessionSocket.id];
     });
     sessionSocket.on('auth', function (data, ret) {
+        console.log("received auth request from " + sessionSocket.id);
         authenticate('blah', 'blah').then(function (token) {
-            console.log('token returned: ' + token);
+            console.log('returning token ' + token + " to " + sessionSocket.id);
             ret(token);
         });
     });
