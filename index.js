@@ -18,7 +18,7 @@ function onLoad() {
 function parseEpisode(xml){
 	console.log("parsingEpisode");
 	$(xml).find("Video").each(function () {
-		if (!$(this).attr("type") === 'episode') {
+		if ($(this).attr("type") !== 'episode') {
 			return;
 		}
 		var episodeInfo = {
@@ -26,7 +26,7 @@ function parseEpisode(xml){
 			episodeNumber: $(this).attr("index"),
 			title: $(this).attr("title"),
 			metadataId: $(this).attr("ratingKey")
-		}
+		};
 		console.log(JSON.stringify(episodeInfo, null, 2));
 	});
 }
@@ -82,18 +82,18 @@ function loadVideo(event) {
 			type: "video/webm",
 			src: new PlexUrl(address, metadata, port, authToken, 'blah', {videoResolution: resolution, offset: offset})
 		});
+		var metadataId;
+		for (metadataId = 3; metadataId < 20; metadataId++){
+			$.ajax({
+				type: "GET",
+				url: "http://"+address+":"+port+"/library/metadata/"+metadataId+"?X-Plex-Token="+authToken,
+				dataType: "xml",
+				success: parseEpisode
+			});
+		}
 	});
 
 	var previousTime = undefined;
-	var metadataId;
-	for (metadataId = 3; metadataId < 20; metadataId++){
-		$.ajax({
-			type: "GET",
-			url: "http://"+address+":"+port+"/library/metadata/"+metadataId,
-			dataType: "xml",
-			success: parseEpisode
-		});
-	}
 	setInterval(function(){
 		if(videoPlayer.currentTime !== undefined && videoPlayer.currentTime() !== previousTime){
 			console.log('emitting time: ' + videoPlayer.currentTime());
