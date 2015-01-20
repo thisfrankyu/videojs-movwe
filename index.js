@@ -65,6 +65,7 @@ function loadVideo(event) {
 
 	var address = $('#address').val();
 	var metadata = $('#metadata').val();
+	var port = $('#port').val();
 	var resolution = $('input:radio[name=resolution]:checked').val();
 	var hrs = $('#hours').val();
 	var mins = $('#minutes').val();
@@ -79,7 +80,7 @@ function loadVideo(event) {
 		authToken = token[0];
 		videoPlayer.src({
 			type: "video/webm",
-			src: new PlexUrl(address, metadata, authToken, 'blah', {videoResolution: resolution, offset: offset})
+			src: new PlexUrl(address, metadata, port, authToken, 'blah', {videoResolution: resolution, offset: offset})
 		});
 	});
 
@@ -88,7 +89,7 @@ function loadVideo(event) {
 	for (metadataId = 3; metadataId < 20; metadataId++){
 		$.ajax({
 			type: "GET",
-			url: "http://"+address+":32400/library/metadata/"+metadataId,
+			url: "http://"+address+":"+port+"/library/metadata/"+metadataId,
 			dataType: "xml",
 			success: parseEpisode
 		});
@@ -125,12 +126,15 @@ function pauseEveryone(){
 }
 
 
-function PlexUrl(host, metadataId, token, username, options) {
+function PlexUrl(host, metadataId, port, token, username, options) {
 	if (typeof host !== 'string' || host === '') {
 		throw new Error('host must be a string');
 	}
 	if (typeof metadataId !== 'string') {
 		throw new Error('metadataId must be a string');
+	}
+	if (typeof port !== 'string') {
+		throw new Error('port must be a string');
 	}
 	if (typeof token !== 'string' || token === '') {
 		throw new Error('token must be a string');
@@ -140,6 +144,7 @@ function PlexUrl(host, metadataId, token, username, options) {
 	}
 	this.host = host;
 	this.metadataId = metadataId;
+	this.port = port;
 	this.token = token;
 	this.username = username;
 	this.options = {
@@ -168,7 +173,7 @@ function PlexUrl(host, metadataId, token, username, options) {
 }
 
 PlexUrl.prototype.toString = function () {
-	return "http://"+this.host+":32400/video/:/transcode/universal/start"
+	return "http://"+this.host+":"+this.port+"/video/:/transcode/universal/start"
 		+ "?path=http%3A%2F%2F127.0.0.1%3A32400%2Flibrary%2Fmetadata%2F" + this.metadataId
 		+ "&mediaIndex=" + this.options.mediaIndex
 		+ "&partIndex=" + this.options.partIndex

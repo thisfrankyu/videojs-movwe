@@ -42,7 +42,8 @@
             <fieldset id="media">
                 <legend>Media</legend>
                 <label for="address">Address</label> <input id="address" class="form-control" type="text" name="address" placeholder="0.0.0.0"/>
-                <label for="metadata">Metadata ID</label> <input id="metadata" class="form-control" type="text" name="metadata" placeholder="1234"/>
+                <label for="port">Port</label> <input id="port" class="form-control" type="number" name="metadata" min="0" max="65535" value="32400"/>
+                <label for="metadata">Metadata ID</label> <input id="metadata" class="form-control" type="number" name="metadata" min="0" max="999999" placeholder="1234"/>
             </fieldset>
             <fieldset id="quality">
                 <legend>Quality</legend>
@@ -51,7 +52,7 @@
                 <input id="180p" class="form-control" type="radio" name="resolution" value="320x180" /> <label for="180p">180p (Sad Internet)</label>
             </fieldset>
             <fieldset id="time">
-                <legend>Time</legend>
+                <legend>Start Time</legend>
                 <input id="hours" class="form-control" type="number" min="0" max="23" placeholder="0" /> hrs.
                 <input id="minutes" class="form-control" type="number" min="0" max="59" placeholder="0" /> mins.
                 <input id="seconds" class="form-control" type="number" min="0" max="59" placeholder="0" /> secs.
