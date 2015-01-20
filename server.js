@@ -60,7 +60,7 @@ function authenticate(username, password) {
             parseString(body, function (err, result) {
                 //console.log(result);
                 authenticationToken = result.user['authentication-token'];
-                //console.log('authentication token: ' + authenticationToken);
+                console.log('got token: ' + authenticationToken);
                 return authenticationToken;
             });
             return authenticationToken;
@@ -73,7 +73,7 @@ function authenticate(username, password) {
     }, function (error) {
         console.log('Error in authentication: ' + error);
     }).then(function (token) {
-        console.log('returned authToken: ' + token);
+        //console.log('returning token: ' + token);
         return token;
     });
 }
@@ -113,9 +113,9 @@ io.on('connection', function (sessionSocket) {
         delete sessionMap[sessionSocket.id];
     });
     sessionSocket.on('auth', function (data, ret) {
-        console.log("received auth request from " + sessionSocket.id);
+        console.log('received auth request from ' + sessionSocket.id);
         authenticate('blah', 'blah').then(function (token) {
-            console.log('returning token ' + token + " to " + sessionSocket.id);
+            console.log('returning token "' + token + '" to ' + sessionSocket.id);
             ret(token);
         });
     });
