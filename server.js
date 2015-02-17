@@ -1,16 +1,31 @@
 var express = require('express');
 var app = express();
 var http = require('http').Server(app);
-var io = require('socket.io')(http);
+
 var request = require('request');
 var requestPromise = require('request-promise');
 var parseString = require('xml2js').parseString;
 var _ = require('underscore');
+var fs = require('fs');
+
+var httpsOptions = {
+    key: fs.readFileSync('key.pem'),
+    cert: fs.readFileSync('cert.pem')
+};
+var https = require('https').createServer(httpsOptions, app);
+var io = require('socket.io')(https);
+
 
 app.use(express.static(__dirname + '/video-js'));
 app.use(express.static(__dirname));
 app.get('/', function (request, response) {
     response.sendFile(__dirname + '/index.html');
+});
+
+app.get('/hangoutsxml', function(request, response){
+    var filename = '/movwe-hangouts.xml';
+    console.log('serving', filename);
+    response.sendFile(__dirname + filename);
 });
 
 var sessionMap = {};
@@ -125,8 +140,11 @@ io.on('connection', function (sessionSocket) {
 setInterval(synchronize, 1000);
 
 var port = 3000;
+var httpsPort = 3001;
 http.listen(port, function () {
     console.log('listening on *:' + port);
 });
 
-
+https.listen(httpsPort, function () {
+    console.log('listening on *:' + httpsPort);
+});
