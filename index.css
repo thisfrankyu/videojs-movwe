@@ -1,0 +1,56 @@
+#addressForm {
+    margin: 10px 0;
+}
+
+.container {
+    width: 700px;
+}
+
+#controls {
+    margin-top: 20px;
+}
+
+#controls .form-control {
+    color: #ffffff;
+}
+
+#controls fieldset {
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+
+#controls legend {
+    margin-bottom: 0;
+}
+
+#quality input {
+    margin-right: 10px;
+}
+
+#quality label {
+    margin-right: 30px;
+}
+
+#media legend {
+    padding-top: 0;
+}
+
+#groupControls {
+    margin-top: 20px;
+    text-align: center;
+}
+
+#groupControls > button {
+    margin: 0 10px;
+}
+
+.video {
+    width: 640px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+input.form-control {
+    background-color: #484e55;
+    border: 1px solid rgba(0, 0, 0, 0.6);
+}
