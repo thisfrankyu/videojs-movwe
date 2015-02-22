@@ -1,0 +1,7 @@
+{
+  "plexServerProperties": {
+    "username": "blah",
+    "password": "blah"
+  },
+  "port": 3000
+}
