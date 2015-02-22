@@ -4,18 +4,23 @@
 var express = require('express');
 var app = express();
 var http = require('http').Server(app);
-var io = require('socket.io')(http);
 var request = require('request');
 var requestPromise = require('request-promise');
 var parseString = require('xml2js').parseString;
 var _ = require('underscore');
 
-var movweProperties = require('./movwe_properties');
+var movweProperties = require('./movwe-properties');
 
-function Movwe(authenticator) {
+function Movwe(io, authenticator) {
     this.sessionMap = {};
     this.authenticator = authenticator;
+    this.io = io;
 }
+
+Movwe.prototype.init = function () {
+    this.io.on('connection', this.registerSocket.bind(this));
+
+};
 
 Movwe.prototype.registerSocket = function (sessionSocket) {
     this.sessionMap[sessionSocket.id] = {
@@ -27,84 +32,49 @@ Movwe.prototype.registerSocket = function (sessionSocket) {
     };
     sessionSocket.emit('hi', sessionSocket.id);
     console.log('a user connected: session.id: ' + sessionSocket.id + ' rest of socket: ' + sessionSocket.toString());
-    sessionSocket.on('command', function (msg) {
-        console.log('emitting command: ' + msg);
-        io.emit('command', msg);
-    });
-    sessionSocket.on('pause', function () {
-        console.log('emitting pause');
-        io.emit('pause');
-    });
-    sessionSocket.on('play', function () {
-        console.log('emitting play');
-        io.emit('play');
-        _.each(this.sessionMap, function (session) {
-            session.pausedForSynchronization = false;
-        });
-    });
-    sessionSocket.on('time', function (time) {
-        //console.log('client: ' + sessionSocket.id + ' is at time: ' + time);
-        this.sessionMap[sessionSocket.id].currentTime = time;
-        this.sessionMap[sessionSocket.id].timestamp = Date.now();
-    });
-    sessionSocket.on('disconnect', function () {
-        console.log('user disconnected');
-        delete this.sessionMap[sessionSocket.id];
-    });
-    sessionSocket.on('auth', function (data, ret) {
-        console.log('received auth request from ' + sessionSocket.id);
-        var username = movweProperties['plexServerProperties']['username'];
-        var password = movweProperties['plexServerProperties']['password'];
-        this.authenticate(username, password).then(function (token) {
-            console.log('returning token "' + token + '" to ' + sessionSocket.id);
-            ret(token);
-        });
+    sessionSocket.on('auth', this.handleAuth.bind(this, sessionSocket.id));
+    sessionSocket.on('pause', this.handlePause.bind(this));
+    sessionSocket.on('play', this.handlePlay.bind(this));
+    sessionSocket.on('time', this.handleTime.bind(this, sessionSocket.id));
+    sessionSocket.on('disconnect', this.handleDisconnect.bind(this, sessionSocket.id));
+};
+
+Movwe.prototype.handlePlay = function () {
+    console.log('emitting play');
+    this.io.emit('play');
+    _.each(this.sessionMap, function (session) {
+        session.pausedForSynchronization = false;
     });
 };
 
-Movwe.prototype.authenticate = function (username, password) {
+Movwe.prototype.handlePause = function () {
+    console.log('recieved pause, emitting pause');
+    this.io.emit('pause');
+};
 
-    var encodedUsernamePassword = new Buffer(username + ':' + password).toString('base64');
-    var options = {
-        url: "https://my.plexapp.com/users/sign_in.xml",
-        headers: {
-            'Authorization': 'Basic ' + encodedUsernamePassword,
-            'X-Plex-Client-Identifier': 'MovWe'
-        },
-        resolveWithFullResponse: true
-    };
+Movwe.prototype.handleTime = function (sessionSocketId, time) {
+    this.sessionMap[sessionSocketId].currentTime = time;
+    this.sessionMap[sessionSocketId].timestamp = Date.now();
+};
 
-    return requestPromise.post(options).then(function (response) {
-        if (response.statusCode === 201) {
-            var body = response.body;
-            //console.log(body);
-            var authenticationToken = '';
-            parseString(body, function (err, result) {
-                //console.log(result);
-                authenticationToken = result.user['authentication-token'];
-                console.log('got token: ' + authenticationToken);
-                return authenticationToken;
-            });
-            return authenticationToken;
-        } else {
-            console.log('Error in authentication: ' + error);
-            console.log('statusCode: ' + response.statusCode);
-            console.log('error body: ' + response.body);
-            return 'ERROR';
-        }
-    }, function (error) {
-        console.log('Error in authentication: ' + error);
-    }).then(function (token) {
-        //console.log('returning token: ' + token);
-        return token;
+Movwe.prototype.handleAuth = function (sessionSocketId, data, ret) {
+    console.log('received auth request from ' + sessionSocketId);
+    var username = movweProperties['plexServerProperties']['username'];
+    var password = movweProperties['plexServerProperties']['password'];
+    this.authenticator.authenticate(username, password).then(function (token) {
+        console.log('returning token "' + token + '" to ' + sessionSocketId);
+        ret(token);
     });
 };
 
-Movwe.prototype.synchronize = function() {
+Movwe.prototype.handleDisconnect = function (sessionSocketId) {
+    delete this.sessionMap[sessionSocketId];
+}
+
+Movwe.prototype.synchronize = function () {
     var lowestTimeSoFar = Number.POSITIVE_INFINITY;
     var acceptableDelay = 3;
     var goAheadTime = 1;
-    //console.log('sessionMap: ' + sessionMap);
     _.each(this.sessionMap, function (session) {
         lowestTimeSoFar = Math.min(session.currentTime, lowestTimeSoFar);
     });
@@ -124,4 +94,4 @@ Movwe.prototype.synchronize = function() {
     });
 };
 
-module.exports = Movwe;
+exports.Movwe = Movwe;

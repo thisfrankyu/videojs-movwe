@@ -11,11 +11,16 @@
     "socket.io": "^1.2.0",
     "underscore": "~1.7.0",
     "xml2js": "~0.4.4",
-    "util": "~0.10.3"
+    "util": "~0.10.3",
+    "promise": "~6.1.0"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "tape": "~3.5.0",
+    "covert": "~1.0.1"
+  },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "covert": "./node_modules/covert/bin/cmd.js ./test/*.js",
+    "test": "node ./test/*.js",
     "start": "node server.js"
   },
   "repository": {
