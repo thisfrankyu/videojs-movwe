@@ -48,7 +48,7 @@ Movwe.prototype.handlePlay = function () {
 };
 
 Movwe.prototype.handlePause = function () {
-    console.log('recieved pause, emitting pause');
+    console.log('received pause, emitting pause');
     this.io.emit('pause');
 };
 
@@ -69,21 +69,25 @@ Movwe.prototype.handleAuth = function (sessionSocketId, data, ret) {
 
 Movwe.prototype.handleDisconnect = function (sessionSocketId) {
     delete this.sessionMap[sessionSocketId];
-}
+};
 
 Movwe.prototype.synchronize = function () {
     var lowestTimeSoFar = Number.POSITIVE_INFINITY;
+    var lowestSessionSoFar = 'no one';
     var acceptableDelay = 3;
     var goAheadTime = 1;
     _.each(this.sessionMap, function (session) {
-        lowestTimeSoFar = Math.min(session.currentTime, lowestTimeSoFar);
+        if (session.currentTime < lowestTimeSoFar) {
+            lowestTimeSoFar = session.currentTime;
+            lowestSessionSoFar = session.id;
+        }
     });
     _.each(this.sessionMap, function (session) {
         var tooFarAhead = session.currentTime > lowestTimeSoFar + acceptableDelay;
         if (tooFarAhead && !session.pausedForSynchronization) {
             session.socket.emit('pause');
             session.pausedForSynchronization = true;
-            console.log('pausing ' + session.id + ' (ahead by ' + (session.currentTime - lowestTimeSoFar) + ')');
+            console.log('pausing ' + session.id + ' (ahead of ' + lowestSessionSoFar + ' by ' + (session.currentTime - lowestTimeSoFar) + ')');
         }
         var closeEnoughToStartAgain = session.currentTime < lowestTimeSoFar + goAheadTime;
         if (session.pausedForSynchronization && closeEnoughToStartAgain) {
