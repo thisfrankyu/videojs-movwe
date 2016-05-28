@@ -8,6 +8,7 @@ var request = require('request');
 var requestPromise = require('request-promise');
 var parseString = require('xml2js').parseString;
 var _ = require('underscore');
+var PlexEndpoint = require('./plex-endpoint').PlexEndpoint;
 
 var movweProperties = require('./movwe-properties');
 
@@ -19,7 +20,6 @@ function Movwe(io, authenticator) {
 
 Movwe.prototype.init = function () {
     this.io.on('connection', this.registerSocket.bind(this));
-
 };
 
 Movwe.prototype.registerSocket = function (sessionSocket) {
@@ -63,6 +63,8 @@ Movwe.prototype.handleAuth = function (sessionSocketId, data, ret) {
     var password = movweProperties['plexServerProperties']['password'];
     this.authenticator.authenticate(username, password).then(function (token) {
         console.log('returning token "' + token + '" to ' + sessionSocketId);
+        var plexEndpoint = new PlexEndpoint();
+        console.log(plexEndpoint.getLibrary(token));
         ret(token);
     });
 };
