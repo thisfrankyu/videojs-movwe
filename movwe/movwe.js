@@ -35,6 +35,7 @@ Movwe.prototype.registerSocket = function (sessionSocket) {
     sessionSocket.on('auth', this.handleAuth.bind(this, sessionSocket.id));
     sessionSocket.on('pause', this.handlePause.bind(this));
     sessionSocket.on('play', this.handlePlay.bind(this));
+    sessionSocket.on('seek', this.handleSeek.bind(this));
     sessionSocket.on('time', this.handleTime.bind(this, sessionSocket.id));
     sessionSocket.on('disconnect', this.handleDisconnect.bind(this, sessionSocket.id));
 };
@@ -50,6 +51,11 @@ Movwe.prototype.handlePlay = function () {
 Movwe.prototype.handlePause = function () {
     console.log('received pause, emitting pause');
     this.io.emit('pause');
+};
+
+Movwe.prototype.handleSeek = function (time) {
+    console.log('received seek, emitting seek');
+    this.io.emit('seek', time);
 };
 
 Movwe.prototype.handleTime = function (sessionSocketId, time) {

@@ -15,20 +15,25 @@ function onLoad() {
 
 }
 
-function parseEpisode(xml){
+function parseEpisode(callback, xml){
 	console.log("parsingEpisode");
+	var episodeInfo = {};
 	$(xml).find("Video").each(function () {
-		if ($(this).attr("type") !== 'episode') {
-			return;
-		}
-		var episodeInfo = {
+		// if ($(this).attr("type") !== 'episode') {
+		// 	return {};
+		// }
+		episodeInfo = {
 			grandparentTitle: $(this).attr("grandparentTitle"),
 			episodeNumber: $(this).attr("index"),
 			title: $(this).attr("title"),
-			metadataId: $(this).attr("ratingKey")
+			metadataId: $(this).attr("ratingKey"),
+			partId: $(this).find("Part").first().attr("id"),
+			partKey: $(this).find("Part").first().attr("key")
 		};
 		console.log(JSON.stringify(episodeInfo, null, 2));
 	});
+
+	callback(episodeInfo);
 }
 
 
@@ -53,9 +58,15 @@ function loadVideo(event) {
 			videoPlayer.pause();
 		});
 		socket.on('play', function(){
-			console.log('received pause');
+			console.log('received play');
 			videoPlayer.play();
 		});
+		socket.on('seek', function(time) {
+			console.log('received seek');
+			if(!videoPlayer.seeking()) {
+				videoPlayer.currentTime(time);
+			}
+		})
 	}
 
 	$('#pause').removeAttr("disabled");
@@ -78,18 +89,31 @@ function loadVideo(event) {
 
 	socket.emit('auth', {}, function(token){
 		authToken = token[0];
-		videoPlayer.src({
-			type: "video/webm",
-			src: new PlexUrl(address, metadata, port, authToken, 'blah', {videoResolution: resolution, offset: offset})
-		});
-		var metadataId;
-		for (metadataId = 3; metadataId < 20; metadataId++){
+
+		var setVideoPlayerSrc = function (src) {
+			videoPlayer.src({
+				type: "video/webm",
+				src: src.toString()
+			});
+		};
+
+		var setToPlexDirectUrl = function (episodeInfo) {
+			var plexURL = new PlexDirectUrl(address, episodeInfo.partKey, port, authToken, 'blah', {});
+			setVideoPlayerSrc(plexURL);
+		}
+
+		if(resolution == "original") {
+
 			$.ajax({
 				type: "GET",
-				url: "http://"+address+":"+port+"/library/metadata/"+metadataId+"?X-Plex-Token="+authToken,
+				url: new PlexMetadataUrl(address, metadata, port, authToken),
 				dataType: "xml",
-				success: parseEpisode
+				success: parseEpisode.bind({}, setToPlexDirectUrl)
 			});
+		}
+		else {
+			setVideoPlayerSrc(
+				new PlexUrl(address, metadata, port, authToken, 'blah', {videoResolution: resolution, offset: offset}));
 		}
 	});
 
@@ -101,6 +125,15 @@ function loadVideo(event) {
 			previousTime = videoPlayer.currentTime();
 		}
 	}, 1000);
+
+	var seekTime = undefined;
+	videoPlayer.on('seeked', function() {
+		if(videoPlayer.currentTime() !== seekTime) {
+			console.log('video seeked, sending seek');
+			seekEveryone();
+			seekTime = videoPlayer.currentTime();
+		}
+	});
 
 	event.preventDefault();
 }
@@ -123,6 +156,12 @@ function pauseEveryone(){
 	console.log('video paused, sending pause');
 	socket.emit('pause');
 	videoPlayer.pause();
+}
+
+function seekEveryone() {
+	console.log("player seeked to " + videoPlayer.currentTime());
+	console.log("sending seek");
+	socket.emit('seek', videoPlayer.currentTime());
 }
 
 
@@ -197,6 +236,77 @@ PlexUrl.prototype.toString = function () {
 		+ "&X-Plex-Token=" + this.token
 		+ "&X-Plex-Username=" + this.username
 		+ "&X-Plex-Device-Name=" + this.options.xPlexDeviceName;
+};
+
+function PlexDirectUrl(host, partKey, port, token, username, options) {
+	if (typeof host !== 'string' || host === '') {
+		throw new Error('host must be a string');
+	}
+	if (typeof partKey !== 'string') {
+		throw new Error('partKey must be a string');
+	}
+	if (typeof port !== 'string') {
+		throw new Error('port must be a string');
+	}
+	if (typeof token !== 'string' || token === '') {
+		throw new Error('token must be a string');
+	}
+	if (typeof username !== 'string') {
+		throw new Error('username must be a string');
+	}
+	this.host = host;
+	this.partKey = partKey;
+	this.port = port;
+	this.token = token;
+	this.username = username;
+	this.options = {
+		session: "ygepu1ko61dcxr",
+		xPlexClientId: "ktu960u2urn0o1or",
+		xPlexProduct: "MovWe",
+		xPlexDevice: "Windows",
+		xPlexPlatform: "Chrome",
+		xPlexPlatformVersion: "40.0",
+		xPlexVersion: "2.2.7",
+		xPlexDeviceName: "MovWe+(Chrome)"
+	};
+	this.options = _.defaults(options, this.options);
+}
+
+PlexDirectUrl.prototype.toString = function () {
+	return "http://"+this.host+":"+this.port + this.partKey
+		+ "&session=" + this.options.session
+		+ "&X-Plex-Client-Identifier=" + this.options.xPlexClientId
+		+ "&X-Plex-Product=" + this.options.xPlexProduct
+		+ "&X-Plex-Device=" + this.options.xPlexDevice
+		+ "&X-Plex-Platform=" + this.options.xPlexPlatform
+		+ "&X-Plex-Platform-Version=" + this.options.xPlexPlatformVersion
+		+ "&X-Plex-Version=" + this.options.xPlexVersion
+		+ "&X-Plex-Token=" + this.token
+		+ "&X-Plex-Username=" + this.username
+		+ "&X-Plex-Device-Name=" + this.options.xPlexDeviceName;
+};
+
+function PlexMetadataUrl(host, metadataId, port, token) {
+	if (typeof host !== 'string' || host === '') {
+		throw new Error('host must be a string');
+	}
+	if (typeof metadataId !== 'string') {
+		throw new Error('metadataId must be a string');
+	}
+	if (typeof port !== 'string') {
+		throw new Error('port must be a string');
+	}
+	if (typeof token !== 'string' || token === '') {
+		throw new Error('token must be a string');
+	}
+	this.host = host;
+	this.metadataId = metadataId;
+	this.port = port;
+	this.token = token;
+}
+
+PlexMetadataUrl.prototype.toString = function () {
+	return "http://"+this.host+":"+this.port+"/library/metadata/" + this.metadataId + "?X-Plex-Token=" + this.token;
 };
 
 // /:/timeline
