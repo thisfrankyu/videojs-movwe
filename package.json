@@ -16,12 +16,12 @@
   },
   "devDependencies": {
     "tape": "~3.5.0",
-    "covert": "~1.0.1"
+    "covert": "~1.1.0"
   },
   "scripts": {
     "covert": "./node_modules/covert/bin/cmd.js ./test/*.js",
-    "test": "node ./test/*.js",
-    "start": "node server.js"
+    "test": "nodejs ./test/*.js",
+    "start": "nodejs --use_strict server.js"
   },
   "repository": {
     "type": "git",

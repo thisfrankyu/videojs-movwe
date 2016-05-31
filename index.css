@@ -6,6 +6,29 @@
     width: 700px;
 }
 
+#library {
+    margin-top: 20px;
+}
+
+#library legend {
+    margin-bottom: 10px;
+}
+
+#libraryMenu {
+    width: 100%;
+    color: #000000;
+}
+
+#libraryMenu .libraryFile {
+    background-color: #373d44;
+    color: #bbbbbb;
+}
+
+#libraryMenu .libraryDirectory {
+    background-color: #484e55;
+    color: #bbbbbb;
+}
+
 #controls {
     margin-top: 20px;
 }

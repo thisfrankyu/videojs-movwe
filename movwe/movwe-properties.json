@@ -1,7 +1,5 @@
 {
-  "plexServerProperties": {
-    "username": "blah",
-    "password": "blah"
-  },
-  "port": 3000
+  "plexHost": "192.168.1.164",
+  "plexPort": 32400,
+  "serverPort": 3000
 }

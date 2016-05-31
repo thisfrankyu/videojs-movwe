@@ -1,26 +1,77 @@
-/**
- * Created by frank on 2/1/15.
- */
 var express = require('express');
+var _ = require('underscore');
 var app = express();
 var http = require('http').Server(app);
-var request = require('request');
-var requestPromise = require('request-promise');
-var parseString = require('xml2js').parseString;
-var _ = require('underscore');
-var PlexEndpoint = require('./plex-endpoint').PlexEndpoint;
 
-var movweProperties = require('./movwe-properties');
+class Movwe {
+    constructor(io, plexEndpoint) {
+        this.io = io;
+        this.plexEndpoint = plexEndpoint;
+        this.sessions = {};
+        this.clientLibrary = {}; // client view of library
+        this.videos = {}; // ratingKey -> path
+        
+        this.plexEndpoint.getLibrary((jsonResult) => {
+            this.loadLibrary(jsonResult, this.clientLibrary);
+            this.io.on('connection', this.registerSocket.bind(this));
+        });
+    }
 
-function Movwe(io, authenticator) {
-    this.sessionMap = {};
-    this.authenticator = authenticator;
-    this.io = io;
+    /**
+     * Recursively loads library information from Plex server api into
+     * this.clientLibrary, a client-side representation, and
+     * this.videos, a key to file path mapping
+     */
+    loadLibrary(jsonResult, library) {
+        if (!_.has(jsonResult, 'MediaContainer')) return;
+        if (_.has(jsonResult.MediaContainer, 'Directory')) {
+            jsonResult.MediaContainer.Directory.forEach((entry) => {
+                var ratingKey = entry.$.ratingKey;
+                var title = entry.$.title;
+                library[title] = {};
+                this.plexEndpoint.getMetadata(ratingKey, (jsonResult) => this.loadLibrary(jsonResult, library[title]));
+            });
+        }
+
+        if (_.has(jsonResult.MediaContainer, 'Video')) {
+            jsonResult.MediaContainer.Video.forEach((entry) => {
+                var ratingKey = entry.$.ratingKey;
+                var title = entry.$.title;
+
+                entry.Media.forEach((mediaEntry) => {
+                    mediaEntry.Part.forEach((part) => this.videos[ratingKey] = part.$.file);
+                });
+
+                library[title] = ratingKey;
+            });
+        }
+    }
+    
+    registerSocket(sessionSocket) {
+        this.sessions[sessionSocket.id] = {
+            socket: sessionSocket,
+            currentTime: 0,
+            timestamp: Date.now(),
+            pausedForSynchronization: false
+        };
+        
+        console.log('New session created, id=%s' + sessionSocket.id);
+
+        console.log('Client library:' + JSON.stringify(this.clientLibrary, null, '\t'));
+        console.log('Videos: ' + JSON.stringify(this.videos, null, '\t'));
+
+        sessionSocket.on('library', () => sessionSocket.emit('libraryResults', this.clientLibrary));
+    }
 }
 
-Movwe.prototype.init = function () {
-    this.io.on('connection', this.registerSocket.bind(this));
-};
+/*
+function Movwe(io, endpoint) {
+    this.endpoint = endpoint;
+    this.sessionMap = {};
+
+    io.on('connection', this.registerSocket.bind(this));
+    setInterval(this.synchronize, 1000);
+}
 
 Movwe.prototype.registerSocket = function (sessionSocket) {
     this.sessionMap[sessionSocket.id] = {
@@ -30,6 +81,7 @@ Movwe.prototype.registerSocket = function (sessionSocket) {
         timestamp: Date.now(),
         pausedForSynchronization: false
     };
+
     sessionSocket.emit('hi', sessionSocket.id);
     console.log('a user connected: session.id: ' + sessionSocket.id + ' rest of socket: ' + sessionSocket.toString());
     sessionSocket.on('auth', this.handleAuth.bind(this, sessionSocket.id));
@@ -98,6 +150,6 @@ Movwe.prototype.synchronize = function () {
             console.log('resuming ' + session.id);
         }
     });
-};
+};*/
 
 exports.Movwe = Movwe;

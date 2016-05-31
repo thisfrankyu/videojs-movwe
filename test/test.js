@@ -35,7 +35,7 @@ test('test auth', function (t) {
     var movwe = new Movwe(io, new Authenticator());
     movwe.init();
     io.emit('connection', socket);
-    socket.emit('auth', {blah: 'blah'}, function (token) {
+    socket.emit('auth', {plexurl: 'plexurl'}, function (token) {
         return token.then();
     });
     t.equal(movwe.authenticator.token, 'token', 'make sure authenticator has a token after auth message');
@@ -62,7 +62,7 @@ function setup(socketId) {
     var movwe = new Movwe(io, new Authenticator());
     movwe.init();
     io.emit('connection', socket);
-    socket.emit('auth', {blah: 'blah'}, function (token) {
+    socket.emit('auth', {plexurl: 'plexurl'}, function (token) {
         return token.then();
     });
     return {io: io, socket: socket, movwe: movwe};
