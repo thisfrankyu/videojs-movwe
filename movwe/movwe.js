@@ -9,7 +9,7 @@ class Movwe {
         this.plexEndpoint = plexEndpoint;
         this.sessions = {};
         this.clientLibrary = {}; // client view of library
-        this.videos = {}; // ratingKey -> path
+        this.videos = {}; // ratingKey -> paths
         
         this.plexEndpoint.getLibrary((jsonResult) => {
             this.loadLibrary(jsonResult, this.clientLibrary);
@@ -37,9 +37,10 @@ class Movwe {
             jsonResult.MediaContainer.Video.forEach((entry) => {
                 var ratingKey = entry.$.ratingKey;
                 var title = entry.$.title;
+                this.videos[ratingKey] = [];
 
                 entry.Media.forEach((mediaEntry) => {
-                    mediaEntry.Part.forEach((part) => this.videos[ratingKey] = part.$.file);
+                    mediaEntry.Part.forEach((part) => this.videos[ratingKey].push(part.$.file));
                 });
 
                 library[title] = ratingKey;
